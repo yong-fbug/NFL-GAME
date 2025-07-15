@@ -1,29 +1,48 @@
-import React, { useEffect, useRef, useState } from "react";
-import { generateMap } from "../game/generateMap";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import { generateMap, HEIGHT, WIDTH } from "../game/generateMap";
 import { GameCanvas } from "./GameCanvas";
 
-export const GameController: React.FC = () => {
+export const GameController = forwardRef((props, ref) => {
   const initial = React.useMemo(() => generateMap(), []);
-  const [floor, setFloor] = useState(0);    
+  const [floor, setFloor] = useState(0);
+  const [tileSize, setTileSize] = useState(20);
   const [{ map }, setMap] = useState(initial);
   const [piece, setPiece] = useState(initial.spawn);
 
-  const TILE_SIZE = 20;
   const VIEWPORT_WIDTH = 20;
   const VIEWPORT_HEIGHT = 20;
 
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const ref = containerRef.current;
-    if (!ref) return;
+    const handleResize = () => {
+      const height = window.innerHeight;
+      const maxTileSizeY = height / VIEWPORT_HEIGHT;
+      const maxTileSizeX = (window.innerWidth * 0.5) / VIEWPORT_WIDTH;
+      const newTileSize = Math.min(maxTileSizeX, maxTileSizeY);
+      setTileSize(newTileSize);
+    };
 
-    const handleBlur = () => ref.focus()
-    ref.addEventListener("blur", handleBlur)
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-    ref.focus();
-    
-    return () => ref.removeEventListener("blue", handleBlur);
+  useEffect(() => {
+    const refCurrent = containerRef.current;
+    if (!refCurrent) return;
+
+    const handleBlur = () => refCurrent.focus();
+    refCurrent.addEventListener("blur", handleBlur);
+    refCurrent.focus();
+
+    return () => refCurrent.removeEventListener("blur", handleBlur);
   }, []);
 
   const movePiece = (dx: number, dy: number) => {
@@ -41,20 +60,19 @@ export const GameController: React.FC = () => {
 
     const tile = map[newY][newX];
 
-      if (tile === 0) {
-        setPiece({ x: newX, y: newY });
-      } else if (tile === 20) {
-        setFloor(prev => prev + 1);
-        const changeFloor = generateMap();
-        setMap(changeFloor);
-        setPiece(changeFloor.spawn);
-      } else if (tile === 21) {
-        setFloor(prev => prev - 1);
-        const changeFloor = generateMap();
-        setMap(changeFloor);
-        setPiece(changeFloor.spawn);
-      }
-    
+    if (tile === 0) {
+      setPiece({ x: newX, y: newY });
+    } else if (tile === 20) {
+      setFloor((prev) => prev + 1);
+      const changeFloor = generateMap();
+      setMap(changeFloor);
+      setPiece(changeFloor.spawn);
+    } else if (tile === 21) {
+      setFloor((prev) => prev - 1);
+      const changeFloor = generateMap();
+      setMap(changeFloor);
+      setPiece(changeFloor.spawn);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -75,23 +93,27 @@ export const GameController: React.FC = () => {
     }
   };
 
+  //Make movePiece available to parent
+  useImperativeHandle(ref, () => ({ movePiece }));
+
   return (
     <div
       ref={containerRef}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       style={{ outline: "none" }}
-      className="inline-block"
+      className="h-full w-full"
     >
       <GameCanvas
         map={map}
         piece={piece}
-        TILE_SIZE={TILE_SIZE}
+        TILE_SIZE={tileSize}
         VIEWPORT_HEIGHT={VIEWPORT_HEIGHT}
         VIEWPORT_WIDTH={VIEWPORT_WIDTH}
         floor={floor}
+        WIDTH={WIDTH}
+        HEIGHT={HEIGHT}
       />
     </div>
   );
-};
-
+});

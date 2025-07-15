@@ -1,12 +1,33 @@
 export const WIDTH = 20;
 export const HEIGHT = 20;
 
-type Tile = 0 | 1 | 21 | 20 
+//0 walkable, 1 wall, 21 -, 20 +
+type Tile = 0 | 1 | 2 | 21 | 20;
 
 export function generateMap(): { map: Tile[][]; spawn: { x: number; y: number } } {
   const map: Tile[][] = Array.from({ length: HEIGHT }, () =>
-    Array.from({ length: WIDTH }, () => (Math.random() < 0.15 ? 1 : 0))
+    Array.from({ length: WIDTH }, () => 0)
   );
+
+  const smallTreeChance = 0.1;
+  for (let x = 0; x < HEIGHT; x++) {
+    for (let y = 0; y < WIDTH; y++) {
+      if (Math.random() < smallTreeChance) {
+        map[y][x] = 1;
+      }
+    }
+  }
+
+  const largeTreeChance = Math.floor(WIDTH * HEIGHT * 0.01);
+  for (let i = 0; i < largeTreeChance; i++) {
+    const x = Math.floor(Math.random() * (WIDTH - 1));
+    const y = Math.floor(Math.random() * (HEIGHT - 1));
+
+    map[y][x] = 2;
+    map[y][x + 1] = 2;
+    map[y + 1][x] = 2;
+    map[y + 1][x + 1] = 2;
+  }
 
   const validSpotsStairs: { x: number; y: number }[] = [];
   for (let y = 0; y < HEIGHT; y++) {
@@ -47,4 +68,3 @@ export function generateMap(): { map: Tile[][]; spawn: { x: number; y: number } 
 
   return { map, spawn };
 }
-

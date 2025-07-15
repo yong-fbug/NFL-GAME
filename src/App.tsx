@@ -1,16 +1,60 @@
-
-import { GameController } from "./components/GameController"
-
+import { useRef } from "react";
+import { GameController } from "./components/GameController";
 
 const App = () => {
+  const gameControllerRef = useRef<{
+    movePiece: (dx: number, dy: number) => void;
+  }>(null);
   return (
-    <div className='min-h-screen bg-black p-8 overflow-hidden flex items-center justify-center'>
-      <div className='absolute left-30 top-20'>
-        <h1 className='text-xl mb-4 text-white'>Night Fall Loop</h1>
-      </div>    
-        <GameController />
-    </div>
-  )
-}
+    <div className="flex h-screen w-screen">
+      <div className="basis-1/4 flex-none bg-red-200">LEFT</div>
 
-export default App
+      <div className="basis-1/2 flex-none flex items-center justify-center bg-gray-900">
+        <GameController ref={gameControllerRef} />
+      </div>
+
+      <div className="basis-1/4 flex flex-col items-center relative bg-blue-200">
+        <div>
+          <p>GOLD: 999999</p>
+        </div>
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 ">
+          <button
+            onClick={() => gameControllerRef.current?.movePiece(0, -1)}
+            className="w-10 h-10 rounded-md bg-gray-500 hover:bg-gray-600 text-white font-bold shadow-md
+            active:scale-95 transition-all"
+          >
+            ^
+          </button>
+
+          <div className="flex gap-12">
+            <button
+              onClick={() => gameControllerRef.current?.movePiece(-1, 0)}
+              className="w-10 h-10 rounded-md bg-gray-500 hover:bg-gray-600 text-white font-bold shadow-md
+            active:scale-95 transition-all"
+            >
+              <h1>{`<`}</h1>
+            </button>
+
+            <button
+              onClick={() => gameControllerRef.current?.movePiece(1, 0)}
+              className="w-10 h-10 rounded-md bg-gray-500 hover:bg-gray-600 text-white font-bold shadow-md
+            active:scale-95 transition-all"
+            >
+              <h1>{`>`}</h1>
+            </button>
+          </div>
+
+          <button
+            onClick={() => gameControllerRef.current?.movePiece(0, 1)}
+            className="w-10 h-10 rounded-md bg-gray-500 hover:bg-gray-600 text-white font-bold shadow-md
+              active:scale-95 transition-all"
+          >
+            v
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;

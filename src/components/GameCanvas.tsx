@@ -1,3 +1,4 @@
+
 import { Tile } from "../game/Tile";
 
 interface Props {
@@ -7,6 +8,8 @@ interface Props {
   VIEWPORT_WIDTH: number;
   VIEWPORT_HEIGHT: number;
   floor: number;
+  WIDTH: number;
+  HEIGHT: number;
 }
 
 export const GameCanvas: React.FC<Props> = ({
@@ -15,44 +18,51 @@ export const GameCanvas: React.FC<Props> = ({
   TILE_SIZE,
   VIEWPORT_HEIGHT,
   VIEWPORT_WIDTH,
-  floor,
+  // floor,
+  WIDTH,
+  HEIGHT,
 }) => {
-  const offsetX = Math.max(
-    0,
-    Math.min(piece.x - Math.floor(VIEWPORT_WIDTH / 2), map[0].length - VIEWPORT_WIDTH)
-  );
-  const offsetY = Math.max(
-    0,
-    Math.min(piece.y - Math.floor(VIEWPORT_HEIGHT / 2), map.length - VIEWPORT_HEIGHT)
-  );
+
+  const wrappedPieceX = (piece.x + WIDTH) % WIDTH;
+  const wrappedPieceY = (piece.y + HEIGHT) % HEIGHT;
+
+  const offsetX = wrappedPieceX - Math.floor(VIEWPORT_WIDTH / 2);
+  const offsetY = wrappedPieceY - Math.floor(VIEWPORT_HEIGHT / 2);
 
   return (
-    <>
-      <div>
-        <p className="text-white mb-2 text-4xl">Floor: {floor}</p>
-      </div>
-      <div
+    <div className="flex items-center justify-center h-full w-full overflow-hidden">
+      <div className="bg-gray-800"
         style={{
           display: "grid",
-          background: "#333",
           gridTemplateColumns: `repeat(${VIEWPORT_WIDTH}, ${TILE_SIZE}px)`,
           gridTemplateRows: `repeat(${VIEWPORT_HEIGHT}, ${TILE_SIZE}px)`,
         }}
       >
-        {map.slice(offsetY, offsetY + VIEWPORT_HEIGHT).map((row, y) =>
-          row.slice(offsetX, offsetX + VIEWPORT_WIDTH).map((cell, x) => {
-            const isPiece = piece.x === offsetX + x && piece.y === offsetY + y;
+        { Array.from({ length: VIEWPORT_HEIGHT }).map((_, y) => {
+          const rowIndex = (offsetY + y + HEIGHT) % HEIGHT;
+          const row = map[rowIndex];
+
+          return Array.from({ length: VIEWPORT_WIDTH }).map((_, x) => {
+            const colIndex = (offsetX + x + WIDTH) % WIDTH;
+            const cell = row[colIndex];
+
+            const isPiece = wrappedPieceX === colIndex && wrappedPieceY === rowIndex;
+
             return (
-              <Tile
-                key={`${offsetX + x}-${offsetY + y}`} // unique keys!
+              <Tile 
+                key={`${colIndex}${rowIndex}`}
                 cell={cell}
                 isPiece={isPiece}
                 TILE_SIZE={TILE_SIZE}
+                x={colIndex}
+                y={rowIndex}
+                map={map}
+              
               />
             );
           })
-        )}
+        })}
       </div>
-    </>
+    </div>
   );
 };
