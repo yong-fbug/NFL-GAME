@@ -17,7 +17,8 @@ export const Tile: React.FC<TileProps> = React.memo(
       map[y]?.[x + 1] === 2 &&
       map[y + 1]?.[x] === 2 &&
       map[y + 1]?.[x + 1] === 2 &&
-      (map[y - 1]?.[x] !== 2 && map[y]?.[x - 1] !== 2);
+      map[y - 1]?.[x] !== 2 &&
+      map[y]?.[x - 1] !== 2;
 
     return (
       <div
@@ -25,7 +26,7 @@ export const Tile: React.FC<TileProps> = React.memo(
           width: `${TILE_SIZE}px`,
           height: `${TILE_SIZE}px`,
           position: "relative",
-          background: 
+          background:
             cell === 20
               ? "radial-gradient(circle, #a855f7, #6b21a8)"
               : cell === 21
@@ -33,11 +34,7 @@ export const Tile: React.FC<TileProps> = React.memo(
               : undefined,
         }}
         className={`border border-gray-700 ${
-          cell === 1
-            ? "bg-gray-800"
-            : cell === 0
-            ? "bg-gray-600"
-            : ""
+          cell === 1 ? "bg-gray-800" : cell === 0 ? "bg-gray-600" : ""
         }`}
       >
         {cell === 2 && isTopLeftOfLargeTree && (
@@ -57,7 +54,7 @@ export const Tile: React.FC<TileProps> = React.memo(
 
         {isPiece && (
           <div
-            className="bg-red-700 shadow-md"
+            className="bg-amber-700 shadow-md"
             style={{
               position: "absolute",
               width: "80%",

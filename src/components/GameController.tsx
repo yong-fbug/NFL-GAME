@@ -8,7 +8,7 @@ import React, {
 import { generateMap, HEIGHT, WIDTH } from "../game/generateMap";
 import { GameCanvas } from "./GameCanvas";
 
-export const GameController = forwardRef((props, ref) => {
+export const GameController = forwardRef((_, ref) => {
   const initial = React.useMemo(() => generateMap(), []);
   const [floor, setFloor] = useState(0);
   const [tileSize, setTileSize] = useState(20);
@@ -94,7 +94,7 @@ export const GameController = forwardRef((props, ref) => {
   };
 
   //Make movePiece available to parent
-  useImperativeHandle(ref, () => ({ movePiece }));
+  useImperativeHandle(ref, () => ({ movePiece, floor }));
 
   return (
     <div

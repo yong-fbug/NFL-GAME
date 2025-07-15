@@ -1,13 +1,27 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GameController } from "./components/GameController";
 
 const App = () => {
   const gameControllerRef = useRef<{
     movePiece: (dx: number, dy: number) => void;
+    floor: number;
   }>(null);
+
+  const [floor, setFloor] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const floorValue = gameControllerRef.current?.floor ?? 0;
+      setFloor(floorValue);
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, []);
   return (
     <div className="flex h-screen w-screen">
-      <div className="basis-1/4 flex-none bg-red-200">LEFT</div>
+      <div className="basis-1/4 flex-none bg-red-200">
+        <p>Floor: {floor} </p>
+      </div>
 
       <div className="basis-1/2 flex-none flex items-center justify-center bg-gray-900">
         <GameController ref={gameControllerRef} />

@@ -1,10 +1,13 @@
-export const WIDTH = 20;
-export const HEIGHT = 20;
+export const WIDTH = 50;
+export const HEIGHT = 50;
 
 //0 walkable, 1 wall, 21 -, 20 +
 type Tile = 0 | 1 | 2 | 21 | 20;
 
-export function generateMap(): { map: Tile[][]; spawn: { x: number; y: number } } {
+export function generateMap(): {
+  map: Tile[][];
+  spawn: { x: number; y: number };
+} {
   const map: Tile[][] = Array.from({ length: HEIGHT }, () =>
     Array.from({ length: WIDTH }, () => 0)
   );
@@ -40,7 +43,8 @@ export function generateMap(): { map: Tile[][]; spawn: { x: number; y: number } 
 
   const STAIRS_TYPES: Tile[] = [20, 21];
   for (const type of STAIRS_TYPES) {
-    if (validSpotsStairs.length === 0) throw new Error("No space left for stairs");
+    if (validSpotsStairs.length === 0)
+      throw new Error("No space left for stairs");
     const idx = Math.floor(Math.random() * validSpotsStairs.length);
     const spot = validSpotsStairs.splice(idx, 1)[0];
     map[spot.y][spot.x] = type;
