@@ -13,19 +13,33 @@ export const GameController = forwardRef((_, ref) => {
   const [floor, setFloor] = useState(0);
   const [tileSize, setTileSize] = useState(20);
   const [{ map }, setMap] = useState(initial);
-  const [piece, setPiece] = useState(initial.spawn);
+
+  const [moveState, setMoveState] = useState<{
+    from: { x: number; y: number };
+    to: { x: number; y: number };
+    t: number; // 0 to 1
+  }>({
+    from: initial.spawn,
+    to: initial.spawn,
+    t: 1, // done moving
+  });
 
   const VIEWPORT_WIDTH = 20;
   const VIEWPORT_HEIGHT = 20;
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Resize tiles on window resize
   useEffect(() => {
     const handleResize = () => {
+      const isMobile = window.innerWidth < 768; //md
       const height = window.innerHeight;
+      const width = isMobile ? window.innerWidth : window.innerWidth * 0.5;
+
       const maxTileSizeY = height / VIEWPORT_HEIGHT;
-      const maxTileSizeX = (window.innerWidth * 0.5) / VIEWPORT_WIDTH;
-      const newTileSize = Math.min(maxTileSizeX, maxTileSizeY);
+      const maxTileSizeX = width / VIEWPORT_WIDTH;
+
+      const newTileSize = Math.floor(Math.min(maxTileSizeX, maxTileSizeY));
       setTileSize(newTileSize);
     };
 
@@ -34,6 +48,7 @@ export const GameController = forwardRef((_, ref) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Keep focus for keyboard input
   useEffect(() => {
     const refCurrent = containerRef.current;
     if (!refCurrent) return;
@@ -45,9 +60,34 @@ export const GameController = forwardRef((_, ref) => {
     return () => refCurrent.removeEventListener("blur", handleBlur);
   }, []);
 
+  // Smooth slide using requestAnimationFrame
+  useEffect(() => {
+    let animationFrameId: number;
+    const speed = 5; // tiles per second
+
+    const animate = () => {
+      setMoveState((state) => {
+        if (state.t >= 1) return state;
+
+        const dist = speed * (1 / 60); // assume ~60fps frame step
+        const newT = Math.min(1, state.t + dist);
+
+        return { ...state, t: newT };
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, []);
+
   const movePiece = (dx: number, dy: number) => {
-    let newX = piece.x + dx;
-    let newY = piece.y + dy;
+    if (moveState.t < 1) return; // Block input while moving
+
+    let newX = moveState.to.x + dx;
+    let newY = moveState.to.y + dy;
 
     const maxX = map[0].length;
     const maxY = map.length;
@@ -61,17 +101,20 @@ export const GameController = forwardRef((_, ref) => {
     const tile = map[newY][newX];
 
     if (tile === 0) {
-      setPiece({ x: newX, y: newY });
-    } else if (tile === 20) {
-      setFloor((prev) => prev + 1);
+      setMoveState({
+        from: moveState.to,
+        to: { x: newX, y: newY },
+        t: 0,
+      });
+    } else if (tile === 20 || tile === 21) {
       const changeFloor = generateMap();
       setMap(changeFloor);
-      setPiece(changeFloor.spawn);
-    } else if (tile === 21) {
-      setFloor((prev) => prev - 1);
-      const changeFloor = generateMap();
-      setMap(changeFloor);
-      setPiece(changeFloor.spawn);
+      setFloor((prev) => prev + (tile === 20 ? 1 : -1));
+      setMoveState({
+        from: changeFloor.spawn,
+        to: changeFloor.spawn,
+        t: 1,
+      });
     }
   };
 
@@ -93,8 +136,14 @@ export const GameController = forwardRef((_, ref) => {
     }
   };
 
-  //Make movePiece available to parent
+  // Expose to parent
   useImperativeHandle(ref, () => ({ movePiece, floor }));
+
+  // Smooth piece position for render
+  const smoothPos = {
+    x: moveState.from.x + (moveState.to.x - moveState.from.x) * moveState.t,
+    y: moveState.from.y + (moveState.to.y - moveState.from.y) * moveState.t,
+  };
 
   return (
     <div
@@ -106,7 +155,7 @@ export const GameController = forwardRef((_, ref) => {
     >
       <GameCanvas
         map={map}
-        piece={piece}
+        piece={smoothPos}
         TILE_SIZE={tileSize}
         VIEWPORT_HEIGHT={VIEWPORT_HEIGHT}
         VIEWPORT_WIDTH={VIEWPORT_WIDTH}
