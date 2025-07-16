@@ -92,17 +92,34 @@ export const GameController = forwardRef((_, ref) => {
     const maxX = map[0].length;
     const maxY = map.length;
 
+    let fromX = moveState.to.x;
+    let fromY = moveState.to.y;
+
+    //wrap X
     if (newX < 0) newX = maxX - 1;
     else if (newX >= maxX) newX = 0;
 
+    if (newX === 0 && moveState.to.x === maxX - 1) {
+      fromX = -1;
+    } else if (newX === maxX - 1 && moveState.to.x === 0) {
+      fromX = maxX;
+    }
+
+    //wrap Y
     if (newY < 0) newY = maxY - 1;
     else if (newY >= maxY) newY = 0;
+
+    if (newY === 0 && moveState.to.y === maxY - 1) {
+      fromY = -1;
+    } else if (newY === maxY - 1 && moveState.to.y === 0) {
+      fromY = maxY;
+    }
 
     const tile = map[newY][newX];
 
     if (tile === 0) {
       setMoveState({
-        from: moveState.to,
+        from: { x: fromX, y: fromY },
         to: { x: newX, y: newY },
         t: 0,
       });
@@ -116,6 +133,10 @@ export const GameController = forwardRef((_, ref) => {
         t: 1,
       });
     }
+  };
+
+  const doSomething = () => {
+    console.log("Stay where you are");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -133,11 +154,14 @@ export const GameController = forwardRef((_, ref) => {
       case "ArrowRight":
         movePiece(1, 0);
         break;
+      case " ": //space
+        doSomething();
+        break;
     }
   };
 
   // Expose to parent
-  useImperativeHandle(ref, () => ({ movePiece, floor }));
+  useImperativeHandle(ref, () => ({ movePiece, floor, doSomething }));
 
   // Smooth piece position for render
   const smoothPos = {
@@ -151,7 +175,7 @@ export const GameController = forwardRef((_, ref) => {
       tabIndex={0}
       onKeyDown={handleKeyDown}
       style={{ outline: "none" }}
-      className="h-full w-full"
+      className="relative h-full w-full"
     >
       <GameCanvas
         map={map}

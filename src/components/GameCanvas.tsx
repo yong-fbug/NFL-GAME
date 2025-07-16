@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Tile } from "../game/Tile";
+import React, { useEffect, useRef } from "react";
+import { VisionOverlay } from "./VisionOverlay";
 
 interface Props {
   map: number[][];
@@ -17,29 +17,11 @@ export const GameCanvas: React.FC<Props> = ({
   piece,
   VIEWPORT_HEIGHT,
   VIEWPORT_WIDTH,
+  TILE_SIZE,
   WIDTH,
   HEIGHT,
 }) => {
-  const [tileSize, setTileSize] = useState(20);
-
-  useEffect(() => {
-    const handleResize = () => {
-      const isMobile = window.innerWidth < 768;
-      const usableWidth = isMobile
-        ? window.innerWidth
-        : window.innerWidth * 0.5;
-      const usableHeight = window.innerHeight;
-
-      const sizeX = usableWidth / VIEWPORT_WIDTH;
-      const sizeY = usableHeight / VIEWPORT_HEIGHT;
-
-      setTileSize(Math.floor(Math.min(sizeX, sizeY)));
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [VIEWPORT_WIDTH, VIEWPORT_HEIGHT]);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const wrappedPieceX = Math.floor(piece.x + WIDTH) % WIDTH;
   const wrappedPieceY = Math.floor(piece.y + HEIGHT) % HEIGHT;
@@ -47,40 +29,137 @@ export const GameCanvas: React.FC<Props> = ({
   const offsetX = wrappedPieceX - Math.floor(VIEWPORT_WIDTH / 2);
   const offsetY = wrappedPieceY - Math.floor(VIEWPORT_HEIGHT / 2);
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let y = 0; y < VIEWPORT_HEIGHT; y++) {
+      const rowIndex = (offsetY + y + HEIGHT) % HEIGHT;
+      for (let x = 0; x < VIEWPORT_WIDTH; x++) {
+        const colIndex = (offsetX + x + WIDTH) % WIDTH;
+        const cell = map[rowIndex][colIndex];
+        const drawX = x * TILE_SIZE;
+        const drawY = y * TILE_SIZE;
+
+        //Background
+        if (cell === 0) {
+          ctx.fillStyle = "#4B5563"; // bg-gray-600
+          ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+
+          ctx.strokeStyle = "#1F2937";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+        } else if (cell === 1) {
+          ctx.fillStyle = "#1F2937"; // bg-gray-800
+        } else if (cell === 2) {
+          ctx.fillStyle = "#1F2937";
+
+          ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+        } else if (cell === 20) {
+          const grad = ctx.createRadialGradient(
+            drawX + TILE_SIZE / 2,
+            drawY + TILE_SIZE / 2,
+            0,
+            drawX + TILE_SIZE / 2,
+            drawY + TILE_SIZE / 2,
+            TILE_SIZE / 2
+          );
+          grad.addColorStop(0, "#a855f7");
+          grad.addColorStop(1, "#6b21a8");
+          ctx.fillStyle = grad;
+        } else if (cell === 21) {
+          const grad = ctx.createRadialGradient(
+            drawX + TILE_SIZE / 2,
+            drawY + TILE_SIZE / 2,
+            0,
+            drawX + TILE_SIZE / 2,
+            drawY + TILE_SIZE / 2,
+            TILE_SIZE / 2
+          );
+          grad.addColorStop(0, "#3b82f6");
+          grad.addColorStop(1, "#1e3a8a");
+          ctx.fillStyle = grad;
+        } else {
+          ctx.fillStyle = "#1F2937";
+          ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+        }
+        ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+
+        // === 2x2 Tree === (draw only once)
+        const isTopLeftOfLargeTree =
+          cell === 2 &&
+          map[rowIndex][(colIndex + 1) % WIDTH] === 2 &&
+          map[(rowIndex + 1) % HEIGHT][colIndex] === 2 &&
+          map[(rowIndex + 1) % HEIGHT][(colIndex + 1) % WIDTH] === 2 &&
+          map[(rowIndex - 1 + HEIGHT) % HEIGHT][colIndex] !== 2 &&
+          map[rowIndex][(colIndex - 1 + WIDTH) % WIDTH] !== 2;
+
+        if (isTopLeftOfLargeTree) {
+          ctx.beginPath();
+          ctx.arc(
+            drawX + TILE_SIZE,
+            drawY + TILE_SIZE,
+            TILE_SIZE,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+
+        // === Player ===
+        if (wrappedPieceX === colIndex && wrappedPieceY === rowIndex) {
+          ctx.fillStyle = "#92400E"; // bg-amber-700
+          ctx.beginPath();
+          ctx.arc(
+            drawX + TILE_SIZE / 2,
+            drawY + TILE_SIZE / 2,
+            TILE_SIZE * 0.4,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+      }
+    }
+  }, [
+    map,
+    wrappedPieceX,
+    wrappedPieceY,
+    offsetX,
+    offsetY,
+    VIEWPORT_WIDTH,
+    VIEWPORT_HEIGHT,
+    TILE_SIZE,
+    WIDTH,
+    HEIGHT,
+  ]);
+
   return (
-    <div className="flex items-center justify-center h-full w-full overflow-hidden">
+    <div className="relative flex items-center justify-center overflow-hidden">
       <div
-        className="bg-gray-800"
         style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${VIEWPORT_WIDTH}, ${tileSize}px)`,
-          gridTemplateRows: `repeat(${VIEWPORT_HEIGHT}, ${tileSize}px)`,
+          width: `${VIEWPORT_WIDTH * TILE_SIZE}px`,
+          height: `${VIEWPORT_HEIGHT * TILE_SIZE}px`,
         }}
       >
-        {Array.from({ length: VIEWPORT_HEIGHT }).map((_, y) => {
-          const rowIndex = (offsetY + y + HEIGHT) % HEIGHT;
-          const row = map[rowIndex];
-
-          return Array.from({ length: VIEWPORT_WIDTH }).map((_, x) => {
-            const colIndex = (offsetX + x + WIDTH) % WIDTH;
-            const cell = row[colIndex];
-
-            const isPiece =
-              wrappedPieceX === colIndex && wrappedPieceY === rowIndex;
-
-            return (
-              <Tile
-                key={`${colIndex}-${rowIndex}`}
-                cell={cell}
-                isPiece={isPiece}
-                TILE_SIZE={tileSize}
-                x={colIndex}
-                y={rowIndex}
-                map={map}
-              />
-            );
-          });
-        })}
+        <canvas
+          ref={canvasRef}
+          width={VIEWPORT_WIDTH * TILE_SIZE}
+          height={VIEWPORT_HEIGHT * TILE_SIZE}
+          className="block"
+        />
+        <VisionOverlay
+          pieceX={wrappedPieceX}
+          pieceY={wrappedPieceY}
+          tileSize={TILE_SIZE}
+          visionRadius={3}
+          viewportHeight={VIEWPORT_HEIGHT}
+          viewportWidth={VIEWPORT_WIDTH}
+        />
       </div>
     </div>
   );

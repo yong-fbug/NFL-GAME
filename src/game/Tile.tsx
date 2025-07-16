@@ -34,12 +34,18 @@ export const Tile: React.FC<TileProps> = React.memo(
               : undefined,
         }}
         className={`border border-gray-700 ${
-          cell === 1 ? "bg-gray-800" : cell === 0 ? "bg-gray-600" : ""
+          cell === 2
+            ? "border"
+            : cell === 1
+            ? "bg-gray-800 border-none"
+            : cell === 0
+            ? "bg-gray-600"
+            : ""
         }`}
       >
         {cell === 2 && isTopLeftOfLargeTree && (
           <div
-            className="absolute bg-gray-850 rounded-full shadow-inner "
+            className="absolute bg-gray-850 rounded-full shadow-inner"
             style={{
               width: `${TILE_SIZE * 2 - 1}px`,
               height: `${TILE_SIZE * 2 - 1.5}px`,

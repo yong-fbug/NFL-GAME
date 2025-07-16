@@ -5,6 +5,7 @@ const App = () => {
   const gameControllerRef = useRef<{
     movePiece: (dx: number, dy: number) => void;
     floor: number;
+    doSomething: () => void;
   }>(null);
 
   const [floor, setFloor] = useState(0);
@@ -26,28 +27,41 @@ const App = () => {
       </div>
 
       {/* CENTER MAP */}
-      <div className="flex-grow flex items-center justify-center bg-gray-900">
-        <GameController ref={gameControllerRef} />
+      <div className=" flex items-center justify-center bg-gray-900">
+        <div className="relative flex-grow flex items-center justify-center bg-gray-900">
+          <GameController ref={gameControllerRef} />
+        </div>
 
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-50">
           <button
             onClick={() => gameControllerRef.current?.movePiece(0, -1)}
-            className="w-10 h-10 rounded-md bg-gray-500 hover:bg-gray-600 text-white font-bold shadow-md active:scale-95 transition-all"
+            className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
+            text-white font-bold shadow-md active:scale-95 transition-all"
           >
             ^
           </button>
 
-          <div className="flex gap-12">
+          <div className="flex gap-2">
             <button
               onClick={() => gameControllerRef.current?.movePiece(-1, 0)}
-              className="w-10 h-10 rounded-md bg-gray-500 hover:bg-gray-600 text-white font-bold shadow-md active:scale-95 transition-all"
+              className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
+              text-white font-bold shadow-md active:scale-95 transition-all"
             >
               <h1>{`<`}</h1>
             </button>
 
             <button
+              onClick={() => gameControllerRef.current?.doSomething()}
+              className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
+              text-white font-bold shadow-md active:scale-95 transition-all"
+            >
+              ⎵
+            </button>
+
+            <button
               onClick={() => gameControllerRef.current?.movePiece(1, 0)}
-              className="w-10 h-10 rounded-md bg-gray-500 hover:bg-gray-600 text-white font-bold shadow-md active:scale-95 transition-all"
+              className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
+              text-white font-bold shadow-md active:scale-95 transition-all"
             >
               <h1>{`>`}</h1>
             </button>
@@ -55,7 +69,8 @@ const App = () => {
 
           <button
             onClick={() => gameControllerRef.current?.movePiece(0, 1)}
-            className="w-10 h-10 rounded-md bg-gray-500 hover:bg-gray-600 text-white font-bold shadow-md active:scale-95 transition-all"
+            className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
+              text-white font-bold shadow-md active:scale-95 transition-all"
           >
             v
           </button>
@@ -63,7 +78,7 @@ const App = () => {
       </div>
 
       {/* RIGHT INFO + CONTROLS */}
-      <div className="hidden md:flex basis-1/4 flex-col items-center relative bg-blue-200 p-4">
+      <div className="hidden flex-grow md:flex basis-1/4 flex-col items-center relative bg-blue-200 p-4">
         <div>
           <p>GOLD: 999999</p>
         </div>
