@@ -8,6 +8,8 @@ interface VisionOverlayProps {
 }
 
 export const VisionOverlay: React.FC<VisionOverlayProps> = ({
+  pieceX,
+  pieceY,
   tileSize,
   visionRadius,
   viewportWidth,
@@ -15,8 +17,8 @@ export const VisionOverlay: React.FC<VisionOverlayProps> = ({
 }) => {
   const gradientSize = visionRadius * tileSize * 2;
 
-  const pieceCenterX = (viewportHeight / 2) * tileSize;
-  const pieceCenterY = (viewportWidth / 2) * tileSize;
+  const pieceCenterX = pieceX * tileSize + tileSize / 2;
+  const pieceCenterY = pieceY * tileSize + tileSize / 2;
 
   return (
     <div
@@ -32,7 +34,7 @@ export const VisionOverlay: React.FC<VisionOverlayProps> = ({
               rgba(0,0,0,0) 0%,
               rgba(0,0,0,0.4) 35%,
               rgba(0,0,0,0.6) 59%,
-              rgba(0,0,0,10) 100%
+              rgba(0,0,0,1) 100%
             )`,
         zIndex: 5,
       }}

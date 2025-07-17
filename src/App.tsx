@@ -3,7 +3,11 @@ import { GameController } from "./components/GameController";
 
 const App = () => {
   const gameControllerRef = useRef<{
-    movePiece: (dx: number, dy: number) => void;
+    movePiece: (
+      dx: number,
+      dy: number,
+      direction?: "up" | "down" | "left" | "right"
+    ) => void;
     floor: number;
     doSomething: () => void;
   }>(null);
@@ -27,14 +31,14 @@ const App = () => {
       </div>
 
       {/* CENTER MAP */}
-      <div className=" flex items-center justify-center bg-gray-900">
+      <div className="flex items-center justify-center bg-gray-900">
         <div className="relative flex-grow flex items-center justify-center bg-gray-900">
           <GameController ref={gameControllerRef} />
         </div>
 
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-50">
           <button
-            onClick={() => gameControllerRef.current?.movePiece(0, -1)}
+            onClick={() => gameControllerRef.current?.movePiece(0, -1, "up")}
             className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
             text-white font-bold shadow-md active:scale-95 transition-all"
           >
@@ -43,7 +47,9 @@ const App = () => {
 
           <div className="flex gap-2">
             <button
-              onClick={() => gameControllerRef.current?.movePiece(-1, 0)}
+              onClick={() =>
+                gameControllerRef.current?.movePiece(-1, 0, "left")
+              }
               className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
               text-white font-bold shadow-md active:scale-95 transition-all"
             >
@@ -59,7 +65,9 @@ const App = () => {
             </button>
 
             <button
-              onClick={() => gameControllerRef.current?.movePiece(1, 0)}
+              onClick={() =>
+                gameControllerRef.current?.movePiece(1, 0, "right")
+              }
               className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
               text-white font-bold shadow-md active:scale-95 transition-all"
             >
@@ -68,7 +76,7 @@ const App = () => {
           </div>
 
           <button
-            onClick={() => gameControllerRef.current?.movePiece(0, 1)}
+            onClick={() => gameControllerRef.current?.movePiece(0, 1, "down")}
             className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
               text-white font-bold shadow-md active:scale-95 transition-all"
           >

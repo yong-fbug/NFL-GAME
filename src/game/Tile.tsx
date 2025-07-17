@@ -1,3 +1,4 @@
+//ready to delete this file
 import React from "react";
 
 interface TileProps {

@@ -13,6 +13,9 @@ export const GameController = forwardRef((_, ref) => {
   const [floor, setFloor] = useState(0);
   const [tileSize, setTileSize] = useState(20);
   const [{ map }, setMap] = useState(initial);
+  // const [direction, setDirection] = useState<"up" | "down" | "left" | "right">(
+  //   "right"
+  // );
 
   const [moveState, setMoveState] = useState<{
     from: { x: number; y: number };
@@ -24,6 +27,7 @@ export const GameController = forwardRef((_, ref) => {
     t: 1, // done moving
   });
 
+  //sice of entire map
   const VIEWPORT_WIDTH = 20;
   const VIEWPORT_HEIGHT = 20;
 
@@ -139,19 +143,26 @@ export const GameController = forwardRef((_, ref) => {
     console.log("Stay where you are");
   };
 
+  // Character will face base on direction
+  const directionRef = useRef<"up" | "down" | "left" | "right">("down");
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     e.preventDefault();
     switch (e.key) {
       case "ArrowUp":
+        directionRef.current = "up";
         movePiece(0, -1);
         break;
       case "ArrowDown":
+        directionRef.current = "down";
         movePiece(0, 1);
         break;
       case "ArrowLeft":
+        directionRef.current = "left";
         movePiece(-1, 0);
         break;
       case "ArrowRight":
+        directionRef.current = "right";
         movePiece(1, 0);
         break;
       case " ": //space
@@ -161,7 +172,18 @@ export const GameController = forwardRef((_, ref) => {
   };
 
   // Expose to parent
-  useImperativeHandle(ref, () => ({ movePiece, floor, doSomething }));
+  useImperativeHandle(ref, () => ({
+    movePiece: (
+      dx: number,
+      dy: number,
+      dir?: "up" | "down" | "left" | "right"
+    ) => {
+      if (dir) directionRef.current = dir;
+      movePiece(dx, dy);
+    },
+    floor,
+    doSomething,
+  }));
 
   // Smooth piece position for render
   const smoothPos = {
@@ -186,6 +208,7 @@ export const GameController = forwardRef((_, ref) => {
         floor={floor}
         WIDTH={WIDTH}
         HEIGHT={HEIGHT}
+        direction={directionRef.current}
       />
     </div>
   );

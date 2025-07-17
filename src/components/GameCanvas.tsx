@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { VisionOverlay } from "./VisionOverlay";
+import Character_Piece from "../assets/Piece_img_default.png";
+import { drawCharacter } from "../game/entities/Piece";
 
 interface Props {
   map: number[][];
@@ -10,6 +12,7 @@ interface Props {
   floor: number;
   WIDTH: number;
   HEIGHT: number;
+  direction: "up" | "down" | "left" | "right";
 }
 
 export const GameCanvas: React.FC<Props> = ({
@@ -20,8 +23,16 @@ export const GameCanvas: React.FC<Props> = ({
   TILE_SIZE,
   WIDTH,
   HEIGHT,
+  direction,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const characterImageRef = useRef<HTMLImageElement | null>(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = Character_Piece;
+    characterImageRef.current = img;
+  }, []);
 
   const wrappedPieceX = Math.floor(piece.x + WIDTH) % WIDTH;
   const wrappedPieceY = Math.floor(piece.y + HEIGHT) % HEIGHT;
@@ -89,7 +100,7 @@ export const GameCanvas: React.FC<Props> = ({
         }
         ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
 
-        // === 2x2 Tree === (draw only once)
+        // 2x2 tile  (draw only once)
         const isTopLeftOfLargeTree =
           cell === 2 &&
           map[rowIndex][(colIndex + 1) % WIDTH] === 2 &&
@@ -110,18 +121,42 @@ export const GameCanvas: React.FC<Props> = ({
           ctx.fill();
         }
 
-        // === Player ===
+        // PLATER / CHARACTER / PIECE
+        // if (wrappedPieceX === colIndex && wrappedPieceY === rowIndex) {
+        //   ctx.fillStyle = "#92400E"; // bg-amber-700
+        //   ctx.beginPath();
+        //   ctx.arc(
+        //     drawX + TILE_SIZE / 2,
+        //     drawY + TILE_SIZE / 2,
+        //     TILE_SIZE * 0.4,
+        //     0,
+        //     Math.PI * 2
+        //   );
+        //   ctx.fill();
+        // }
         if (wrappedPieceX === colIndex && wrappedPieceY === rowIndex) {
-          ctx.fillStyle = "#92400E"; // bg-amber-700
-          ctx.beginPath();
-          ctx.arc(
-            drawX + TILE_SIZE / 2,
-            drawY + TILE_SIZE / 2,
-            TILE_SIZE * 0.4,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
+          if (characterImageRef.current?.complete) {
+            drawCharacter({
+              ctx,
+              drawX,
+              drawY,
+              TILE_SIZE,
+              direction,
+              characterImage: characterImageRef.current,
+            });
+          } else {
+            // fallback circle while loading
+            ctx.fillStyle = "#92400E";
+            ctx.beginPath();
+            ctx.arc(
+              drawX + TILE_SIZE / 2,
+              drawY + TILE_SIZE / 2,
+              TILE_SIZE * 0.4,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          }
         }
       }
     }
@@ -136,6 +171,7 @@ export const GameCanvas: React.FC<Props> = ({
     TILE_SIZE,
     WIDTH,
     HEIGHT,
+    direction,
   ]);
 
   return (
@@ -153,8 +189,8 @@ export const GameCanvas: React.FC<Props> = ({
           className="block"
         />
         <VisionOverlay
-          pieceX={wrappedPieceX}
-          pieceY={wrappedPieceY}
+          pieceX={wrappedPieceX - offsetX}
+          pieceY={wrappedPieceY - offsetY}
           tileSize={TILE_SIZE}
           visionRadius={3}
           viewportHeight={VIEWPORT_HEIGHT}
