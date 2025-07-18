@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import { VisionOverlay } from "./VisionOverlay";
-import Character_Piece from "../assets/Piece_img_default.png";
+import Character_Piece from "../assets/Piece_img_v1.png";
 import { drawCharacter } from "../game/entities/Piece";
 
 interface Props {
   map: number[][];
   piece: { x: number; y: number };
+  mobs: { x: number; y: number }[];
   VIEWPORT_WIDTH: number;
   VIEWPORT_HEIGHT: number;
   TILE_SIZE: number;
@@ -18,6 +19,7 @@ interface Props {
 export const GameCanvas: React.FC<Props> = ({
   map,
   piece,
+  mobs,
   VIEWPORT_HEIGHT,
   VIEWPORT_WIDTH,
   TILE_SIZE,
@@ -26,6 +28,7 @@ export const GameCanvas: React.FC<Props> = ({
   direction,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  //
   const characterImageRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
@@ -158,12 +161,31 @@ export const GameCanvas: React.FC<Props> = ({
             ctx.fill();
           }
         }
+        //MOBS
+        mobs.forEach((mob) => {
+          const mobWrapperX = mob.x % WIDTH;
+          const mobWrapperY = mob.y % HEIGHT;
+
+          if (mobWrapperX === colIndex && mobWrapperY === rowIndex) {
+            ctx.fillStyle = "#DC2626"; //red mob
+            ctx.beginPath();
+            ctx.arc(
+              drawX + TILE_SIZE / 2,
+              drawY + TILE_SIZE / 2,
+              TILE_SIZE * 0.3,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          }
+        });
       }
     }
   }, [
     map,
     wrappedPieceX,
     wrappedPieceY,
+    mobs,
     offsetX,
     offsetY,
     VIEWPORT_WIDTH,

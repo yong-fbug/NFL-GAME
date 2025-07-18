@@ -8,11 +8,21 @@ import React, {
 import { generateMap, HEIGHT, WIDTH } from "../game/generateMap";
 import { GameCanvas } from "./GameCanvas";
 
+type Mob = {
+  id: number;
+  x: number;
+  y: number;
+};
+
 export const GameController = forwardRef((_, ref) => {
   const initial = React.useMemo(() => generateMap(), []);
   const [floor, setFloor] = useState(0);
   const [tileSize, setTileSize] = useState(20);
   const [{ map }, setMap] = useState(initial);
+  const [mobs, setMobs] = useState<Mob[]>([
+    { id: 1, x: 5, y: 5 },
+    { id: 2, x: 10, y: 10 },
+  ]);
   // const [direction, setDirection] = useState<"up" | "down" | "left" | "right">(
   //   "right"
   // );
@@ -127,6 +137,9 @@ export const GameController = forwardRef((_, ref) => {
         to: { x: newX, y: newY },
         t: 0,
       });
+
+      //here is important for TURN-BASED
+      moveMobs();
     } else if (tile === 20 || tile === 21) {
       const changeFloor = generateMap();
       setMap(changeFloor);
@@ -191,6 +204,22 @@ export const GameController = forwardRef((_, ref) => {
     y: moveState.from.y + (moveState.to.y - moveState.from.y) * moveState.t,
   };
 
+  //mobs movement
+  const moveMobs = () => {
+    setMobs((prev) =>
+      prev.map((mob) => {
+        const dx = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
+        const dy = Math.floor(Math.random() * 3) - 1;
+
+        return {
+          ...mob,
+          x: (mob.x + dy + WIDTH) % WIDTH,
+          y: (mob.y + dx + HEIGHT) % WIDTH,
+        };
+      })
+    );
+  };
+
   return (
     <div
       ref={containerRef}
@@ -202,6 +231,7 @@ export const GameController = forwardRef((_, ref) => {
       <GameCanvas
         map={map}
         piece={smoothPos}
+        mobs={mobs}
         TILE_SIZE={tileSize}
         VIEWPORT_HEIGHT={VIEWPORT_HEIGHT}
         VIEWPORT_WIDTH={VIEWPORT_WIDTH}
