@@ -7,26 +7,14 @@ import React, {
 } from "react";
 import { generateMap, HEIGHT, WIDTH } from "../game/generateMap";
 import { GameCanvas } from "./GameCanvas";
-
-type Mob = {
-  id: number;
-  x: number;
-  y: number;
-};
+import { spawnMobs, type Mob } from "../game/entities/Enemy";
 
 export const GameController = forwardRef((_, ref) => {
   const initial = React.useMemo(() => generateMap(), []);
   const [floor, setFloor] = useState(0);
   const [tileSize, setTileSize] = useState(20);
   const [{ map }, setMap] = useState(initial);
-  const [mobs, setMobs] = useState<Mob[]>([
-    { id: 1, x: 5, y: 5 },
-    { id: 2, x: 10, y: 10 },
-  ]);
-  // const [direction, setDirection] = useState<"up" | "down" | "left" | "right">(
-  //   "right"
-  // );
-
+  const [mobs, setMobs] = useState<Mob[]>(() => spawnMobs(3, WIDTH, HEIGHT));
   const [moveState, setMoveState] = useState<{
     from: { x: number; y: number };
     to: { x: number; y: number };
@@ -208,17 +196,65 @@ export const GameController = forwardRef((_, ref) => {
   const moveMobs = () => {
     setMobs((prev) =>
       prev.map((mob) => {
-        const dx = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-        const dy = Math.floor(Math.random() * 3) - 1;
+        const mobsDirection: {
+          dx: number;
+          dy: number;
+          direction: "up" | "down" | "left" | "right";
+        }[] = [
+          { dx: 0, dy: -1, direction: "up" }, // up
+          { dx: 0, dy: 1, direction: "down" }, // down
+          { dx: -1, dy: 0, direction: "left" }, // left
+          { dx: 1, dy: 0, direction: "right" }, // right
+        ];
+
+        let attempts = 0;
+        let newX = mob.x;
+        let newY = mob.y;
+        let newDir = mob.direction;
+
+        while (attempts < 10) {
+          const choice =
+            mobsDirection[Math.floor(Math.random() * mobsDirection.length)];
+
+          const tryX = (mob.x + choice.dx + WIDTH) % WIDTH;
+          const tryY = (mob.y + choice.dy + HEIGHT) % HEIGHT;
+
+          const tile = map[tryY][tryX];
+
+          // ✅ prevent mobs stepping on player
+          const overlapsPlayer =
+            tryX === Math.floor(piece.x) && tryY === Math.floor(piece.y);
+
+          if (tile === 0 && !overlapsPlayer) {
+            newX = tryX;
+            newY = tryY;
+            newDir = choice.direction;
+            break;
+          }
+
+          attempts++;
+        }
 
         return {
           ...mob,
-          x: (mob.x + dy + WIDTH) % WIDTH,
-          y: (mob.y + dx + HEIGHT) % WIDTH,
+          x: newX,
+          y: newY,
+          direction: newDir,
         };
       })
     );
   };
+
+  // function getDirectionFromDelta(
+  //   dx: number,
+  //   dy: number
+  // ): "up" | "down" | "left" | "right" {
+  //   if (dx === 0 && dy === -1) return "up";
+  //   if (dx === 0 && dy === 1) return "down";
+  //   if (dx === -1 && dy === 0) return "left";
+  //   if (dx === 1 && dy === 0) return "right";
+  //   return "down";
+  // }
 
   return (
     <div

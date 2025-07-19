@@ -1,12 +1,14 @@
 import React, { useEffect, useRef } from "react";
 import { VisionOverlay } from "./VisionOverlay";
 import Character_Piece from "../assets/Piece_img_v1.png";
+import first_mobs from "../assets/Piece_img_default.png";
 import { drawCharacter } from "../game/entities/Piece";
+import type { Mob } from "../game/entities/Enemy";
 
 interface Props {
   map: number[][];
   piece: { x: number; y: number };
-  mobs: { x: number; y: number }[];
+  mobs: Mob[];
   VIEWPORT_WIDTH: number;
   VIEWPORT_HEIGHT: number;
   TILE_SIZE: number;
@@ -28,13 +30,19 @@ export const GameCanvas: React.FC<Props> = ({
   direction,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  //
+  const enemyImageRef = useRef<HTMLImageElement | null>(null);
   const characterImageRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     const img = new Image();
     img.src = Character_Piece;
     characterImageRef.current = img;
+  }, []);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = first_mobs;
+    enemyImageRef.current = img;
   }, []);
 
   const wrappedPieceX = Math.floor(piece.x + WIDTH) % WIDTH;
@@ -163,20 +171,26 @@ export const GameCanvas: React.FC<Props> = ({
         }
         //MOBS
         mobs.forEach((mob) => {
-          const mobWrapperX = mob.x % WIDTH;
-          const mobWrapperY = mob.y % HEIGHT;
+          const wrappedMobX = (mob.x + WIDTH) % WIDTH;
+          const wrappedMobY = (mob.y + HEIGHT) % HEIGHT;
 
-          if (mobWrapperX === colIndex && mobWrapperY === rowIndex) {
-            ctx.fillStyle = "#DC2626"; //red mob
-            ctx.beginPath();
-            ctx.arc(
-              drawX + TILE_SIZE / 2,
-              drawY + TILE_SIZE / 2,
-              TILE_SIZE * 0.3,
-              0,
-              Math.PI * 2
-            );
-            ctx.fill();
+          const drawX = (wrappedMobX - offsetX + WIDTH) % WIDTH;
+          const drawY = (wrappedMobY - offsetY + HEIGHT) % HEIGHT;
+
+          if (
+            drawX >= 0 &&
+            drawX < VIEWPORT_WIDTH &&
+            drawY >= 0 &&
+            drawY < VIEWPORT_HEIGHT
+          ) {
+            drawCharacter({
+              ctx,
+              drawX: drawX * TILE_SIZE,
+              drawY: drawY * TILE_SIZE,
+              TILE_SIZE,
+              characterImage: enemyImageRef.current!,
+              direction: mob.direction,
+            });
           }
         });
       }
