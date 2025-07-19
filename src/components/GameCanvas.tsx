@@ -33,11 +33,10 @@ export const GameCanvas: React.FC<Props> = ({
   const enemyImageRef = useRef<HTMLImageElement | null>(null);
   const characterImageRef = useRef<HTMLImageElement | null>(null);
 
-  useEffect(() => {
     const img = new Image();
     img.src = Character_Piece;
     characterImageRef.current = img;
-  }, []);
+
 
   useEffect(() => {
     const img = new Image();
@@ -132,19 +131,6 @@ export const GameCanvas: React.FC<Props> = ({
           ctx.fill();
         }
 
-        // PLATER / CHARACTER / PIECE
-        // if (wrappedPieceX === colIndex && wrappedPieceY === rowIndex) {
-        //   ctx.fillStyle = "#92400E"; // bg-amber-700
-        //   ctx.beginPath();
-        //   ctx.arc(
-        //     drawX + TILE_SIZE / 2,
-        //     drawY + TILE_SIZE / 2,
-        //     TILE_SIZE * 0.4,
-        //     0,
-        //     Math.PI * 2
-        //   );
-        //   ctx.fill();
-        // }
         if (wrappedPieceX === colIndex && wrappedPieceY === rowIndex) {
           if (characterImageRef.current?.complete) {
             drawCharacter({
