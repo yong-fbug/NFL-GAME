@@ -133,28 +133,14 @@ export const GameCanvas: React.FC<Props> = ({
         }
 
         if (wrappedPieceX === colIndex && wrappedPieceY === rowIndex) {
-          if (characterImageRef.current) {
-            drawCharacter({
-              ctx,
-              drawX,
-              drawY,
-              TILE_SIZE,
-              direction,
-              characterImage: characterImageRef.current,
-            });
-          } else {
-            // fallback circle while loading
-            ctx.fillStyle = "#92400E";
-            ctx.beginPath();
-            ctx.arc(
-              drawX + TILE_SIZE / 2,
-              drawY + TILE_SIZE / 2,
-              TILE_SIZE * 0.4,
-              0,
-              Math.PI * 2
-            );
-            ctx.fill();
-          }
+          drawCharacter({
+            ctx,
+            drawX,
+            drawY,
+            TILE_SIZE,
+            direction,
+            characterImage: characterImageRef.current!,
+          });
         }
         //MOBS
         mobs.forEach((mob) => {
