@@ -71,7 +71,7 @@ export const GameController = forwardRef((_, ref) => {
       setMoveState((state) => {
         if (state.t >= 1) return state;
 
-        const dist = speed * (1 / 60); // assume ~60fps frame step
+        const dist = speed * (1 / 60); // assume 60fps frame step
         const newT = Math.min(1, state.t + dist);
 
         return { ...state, t: newT };
@@ -85,7 +85,8 @@ export const GameController = forwardRef((_, ref) => {
     return () => cancelAnimationFrame(animationFrameId);
   }, []);
 
-  const movePiece = (dx: number, dy: number) => {
+  const movePiece = (dx: number, dy: number, dir:"up" | "down" | "left" | "right" | "stay") => {
+    if (dir) directionRef.current = dir;
     if (moveState.t < 1) return; // Block input while moving
 
     let newX = moveState.to.x + dx;
@@ -119,15 +120,21 @@ export const GameController = forwardRef((_, ref) => {
 
     const tile = map[newY][newX];
 
-    if (tile === 0) {
+    const mobAtDestination = mobs.some(
+      (mob) => mob.x === newX && mob.y === newY
+    );
+
+    //here
+    if (tile === 0 && !mobAtDestination) {
+      const newTo = { x: newX, y: newY }
       setMoveState({
         from: { x: fromX, y: fromY },
-        to: { x: newX, y: newY },
+        to: newTo,
         t: 0,
       });
 
       //here is important for TURN-BASED
-      moveMobs();
+      moveMobs(newTo);
     } else if (tile === 20 || tile === 21) {
       const changeFloor = generateMap();
       setMap(changeFloor);
@@ -137,37 +144,39 @@ export const GameController = forwardRef((_, ref) => {
         to: changeFloor.spawn,
         t: 1,
       });
+    } else {
+      //Trigger stay move 
+      moveMobs();
     }
   };
 
-  const doSomething = () => {
-    console.log("Stay where you are");
-  };
 
   // Character will face base on direction
-  const directionRef = useRef<"up" | "down" | "left" | "right">("down");
+  //character movement
+  const directionRef = useRef<"up" | "down" | "left" | "right" | "stay">("down");
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     e.preventDefault();
     switch (e.key) {
       case "ArrowUp":
         directionRef.current = "up";
-        movePiece(0, -1);
+        movePiece(0, -1, "up");
         break;
       case "ArrowDown":
         directionRef.current = "down";
-        movePiece(0, 1);
+        movePiece(0, 1, "down");
         break;
       case "ArrowLeft":
         directionRef.current = "left";
-        movePiece(-1, 0);
+        movePiece(-1, 0, "left");
         break;
       case "ArrowRight":
         directionRef.current = "right";
-        movePiece(1, 0);
+        movePiece(1, 0, "right");
         break;
-      case " ": //space
-        doSomething();
+      case " ": //space 
+      directionRef.current = "stay"
+        movePiece(0, 0, "stay");
         break;
     }
   };
@@ -177,13 +186,12 @@ export const GameController = forwardRef((_, ref) => {
     movePiece: (
       dx: number,
       dy: number,
-      dir?: "up" | "down" | "left" | "right"
+      dir: "up" | "down" | "left" | "right" | "stay"
     ) => {
       if (dir) directionRef.current = dir;
-      movePiece(dx, dy);
+      movePiece(dx, dy, dir);
     },
     floor,
-    doSomething,
   }));
 
   // Smooth piece position for render
@@ -193,68 +201,72 @@ export const GameController = forwardRef((_, ref) => {
   };
 
   //mobs movement
-  const moveMobs = () => {
-    setMobs((prev) =>
-      prev.map((mob) => {
-        const mobsDirection: {
-          dx: number;
-          dy: number;
-          direction: "up" | "down" | "left" | "right";
-        }[] = [
-          { dx: 0, dy: -1, direction: "up" }, // up
-          { dx: 0, dy: 1, direction: "down" }, // down
-          { dx: -1, dy: 0, direction: "left" }, // left
-          { dx: 1, dy: 0, direction: "right" }, // right
-        ];
+  //here
+  const moveMobs = (playerPos?: { x: number; y: number }) => {
+    const playerX = playerPos ? playerPos.x : moveState.to.x;
+    const playerY = playerPos ? playerPos.y : moveState.to.y;
 
-        let attempts = 0;
-        let newX = mob.x;
-        let newY = mob.y;
-        let newDir = mob.direction;
+  const nextPositions: { x: number; y: number }[] = [];
 
-        while (attempts < 10) {
-          const choice =
-            mobsDirection[Math.floor(Math.random() * mobsDirection.length)];
+  setMobs((prev) =>
+    prev.map((mob) => {
+      const mobsDirection = [
+        { dx: 0, dy: -1, direction: "up" },
+        { dx: 0, dy: 1, direction: "down" },
+        { dx: -1, dy: 0, direction: "left" },
+        { dx: 1, dy: 0, direction: "right" },
+        { dx: 0, dy: 0, direction: "stay" },
+      ] as const;
 
-          const tryX = (mob.x + choice.dx + WIDTH) % WIDTH;
-          const tryY = (mob.y + choice.dy + HEIGHT) % HEIGHT;
+      const dist = Math.abs(playerX - mob.x) + Math.abs(playerY - mob.y);
+      const visionRadius = 5;
 
-          const tile = map[tryY][tryX];
+      const behavior: "wander" | "aggro" = dist <= visionRadius ? "aggro" : "wander";
+      let choice: (typeof mobsDirection)[number];
 
-          // ✅ prevent mobs stepping on player
-          const overlapsPlayer =
-            tryX === Math.floor(piece.x) && tryY === Math.floor(piece.y);
+      if (behavior === "aggro") {
+        const roll = Math.random();
+        const dx = playerX - mob.x;
+        const dy = playerY - mob.y;
 
-          if (tile === 0 && !overlapsPlayer) {
-            newX = tryX;
-            newY = tryY;
-            newDir = choice.direction;
-            break;
+        if (roll < 0.7) {
+          if (Math.abs(dx) > Math.abs(dy)) {
+            choice = dx > 0 ? mobsDirection[3] : mobsDirection[2];
+          } else {
+            choice = dy > 0 ? mobsDirection[1] : mobsDirection[0];
           }
-
-          attempts++;
+        } else {
+          if (Math.abs(dx) > Math.abs(dy)) {
+            choice = dx > 0 ? mobsDirection[2] : mobsDirection[3];
+          } else {
+            choice = dy > 0 ? mobsDirection[0] : mobsDirection[1];
+          }
         }
+      } else {
+        choice = mobsDirection[Math.floor(Math.random() * mobsDirection.length)];
+      }
 
-        return {
-          ...mob,
-          x: newX,
-          y: newY,
-          direction: newDir,
-        };
-      })
-    );
-  };
+      const tryX = (mob.x + choice.dx + WIDTH) % WIDTH;
+      const tryY = (mob.y + choice.dy + HEIGHT) % HEIGHT;
 
-  // function getDirectionFromDelta(
-  //   dx: number,
-  //   dy: number
-  // ): "up" | "down" | "left" | "right" {
-  //   if (dx === 0 && dy === -1) return "up";
-  //   if (dx === 0 && dy === 1) return "down";
-  //   if (dx === -1 && dy === 0) return "left";
-  //   if (dx === 1 && dy === 0) return "right";
-  //   return "down";
-  // }
+      const tile = map[tryY][tryX];
+      const overlapsPlayer = tryX === playerX && tryY === playerY;
+
+      // ✅ Robust: ONLY checks nextPositions
+      const overlapsOtherMob = nextPositions.some(
+        (pos) => pos.x === tryX && pos.y === tryY
+      );
+
+      if (tile === 0 && !overlapsPlayer && !overlapsOtherMob) {
+        nextPositions.push({ x: tryX, y: tryY });
+        return { ...mob, x: tryX, y: tryY, direction: choice.direction };
+      } else {
+        nextPositions.push({ x: mob.x, y: mob.y });
+        return mob;
+      }
+    })
+  );
+};
 
   return (
     <div

@@ -24,7 +24,7 @@ export interface CharacterProps {
   drawY: number;
   TILE_SIZE: number;
   characterImage: HTMLImageElement;
-  direction: "up" | "down" | "left" | "right";
+  direction: "up" | "down" | "left" | "right" | "stay";
 }
 
 export function drawCharacter({
@@ -53,6 +53,8 @@ export function drawCharacter({
     case "down":
       angle = 0;
       break;
+    case "stay":
+      break;  //null so it move on same tile
   }
   ctx.rotate(angle);
 

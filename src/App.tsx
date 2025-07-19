@@ -6,7 +6,7 @@ const App = () => {
     movePiece: (
       dx: number,
       dy: number,
-      direction?: "up" | "down" | "left" | "right"
+      direction?: "up" | "down" | "left" | "right" | "stay"
     ) => void;
     floor: number;
     doSomething: () => void;
@@ -57,7 +57,7 @@ const App = () => {
             </button>
 
             <button
-              onClick={() => gameControllerRef.current?.doSomething()}
+              onClick={() => gameControllerRef.current?.movePiece(0, 0, "stay")}
               className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
               text-white font-bold shadow-md active:scale-95 transition-all"
             >

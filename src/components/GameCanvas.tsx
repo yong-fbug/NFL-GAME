@@ -15,7 +15,7 @@ interface Props {
   floor: number;
   WIDTH: number;
   HEIGHT: number;
-  direction: "up" | "down" | "left" | "right";
+  direction: "up" | "down" | "left" | "right" | "stay";
 }
 
 export const GameCanvas: React.FC<Props> = ({
