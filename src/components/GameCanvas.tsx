@@ -33,10 +33,11 @@ export const GameCanvas: React.FC<Props> = ({
   const enemyImageRef = useRef<HTMLImageElement | null>(null);
   const characterImageRef = useRef<HTMLImageElement | null>(null);
 
+  useEffect(() => {
     const img = new Image();
     img.src = Character_Piece;
     characterImageRef.current = img;
-
+  }, []);
 
   useEffect(() => {
     const img = new Image();
@@ -132,7 +133,7 @@ export const GameCanvas: React.FC<Props> = ({
         }
 
         if (wrappedPieceX === colIndex && wrappedPieceY === rowIndex) {
-          if (characterImageRef.current?.complete) {
+          if (characterImageRef.current) {
             drawCharacter({
               ctx,
               drawX,
