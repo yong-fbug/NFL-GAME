@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { VisionOverlay } from "./VisionOverlay";
 import Character_Piece from "../assets/Piece_img_v1.png";
 import first_mobs from "../assets/Piece_img_default.png";
@@ -29,6 +29,7 @@ export const GameCanvas: React.FC<Props> = ({
   HEIGHT,
   direction,
 }) => {
+  const [characterLoad, setCharacterLoad] = useState<boolean>(false)
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const enemyImageRef = useRef<HTMLImageElement | null>(null);
   const characterImageRef = useRef<HTMLImageElement | null>(null);
@@ -36,7 +37,10 @@ export const GameCanvas: React.FC<Props> = ({
   useEffect(() => {
     const img = new Image();
     img.src = Character_Piece;
-    characterImageRef.current = img;
+    img.onload = () => {
+      characterImageRef.current = img;
+      setCharacterLoad(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -52,6 +56,9 @@ export const GameCanvas: React.FC<Props> = ({
   const offsetY = wrappedPieceY - Math.floor(VIEWPORT_HEIGHT / 2);
 
   useEffect(() => {
+    if (!characterLoad) return;
+    if(!characterImageRef.current) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -181,6 +188,7 @@ export const GameCanvas: React.FC<Props> = ({
     WIDTH,
     HEIGHT,
     direction,
+    characterLoad,
   ]);
 
   return (
