@@ -9,31 +9,50 @@ const App = () => {
       direction?: "up" | "down" | "left" | "right" | "stay"
     ) => void;
     floor: number;
+    stats: unknown;
+    attack: (direction: "up" | "down" | "left" | "right" | "stay") => void;
     doSomething: () => void;
   }>(null);
 
   const [floor, setFloor] = useState(0);
+  const [stats, setStats] = useState<null | Record<string, any>>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
       const floorValue = gameControllerRef.current?.floor ?? 0;
+      const statsValue = gameControllerRef.current?.stats ?? 0;
       setFloor(floorValue);
+      setStats(statsValue);
     }, 200);
 
     return () => clearInterval(interval);
   }, []);
-
+console.log("Cataclysmic Anomaly System")
   return (
     <div className="flex h-[100dvh] w-screen">
       {/* LEFT INFO */}
       <div className="hidden md:flex basis-1/4 flex-none bg-red-200 p-4">
         <p>Floor: {floor} </p>
+        {stats && (
+          <div className="mt-4">
+            <p className="font-bold text-2xl">{stats.name} </p>
+            
+            <p>Health: {stats.health}</p>
+            <p>Mana: {stats.mana}</p>
+            <p>Attack: {stats.attack}</p>
+            <p>Armor: {stats.armor}</p>
+          </div>
+        )}
       </div>
+      
 
       {/* CENTER MAP */}
       <div className="flex items-center justify-center bg-gray-900">
         <div className="relative flex-grow flex items-center justify-center bg-gray-900">
           <GameController ref={gameControllerRef} />
+          <button
+            onClick={() => gameControllerRef.current?.attack}
+          >A</button>
         </div>
 
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-50">

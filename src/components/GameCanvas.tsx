@@ -49,6 +49,24 @@ export const GameCanvas: React.FC<Props> = ({
     enemyImageRef.current = img;
   }, []);
 
+  useEffect(() => {
+    console.log("current mobs:", mobs.length)
+    console.table(
+      mobs.slice(0, 10).map(mob => ({
+          id: mob.id,
+          bornId: mob.bornId,
+          x: mob.x,
+          y: mob.y,
+          dir: mob.direction,
+          attack: mob.stats.attack,
+          health: mob.stats.health,
+          armor: mob.stats.armor,
+          range: mob.stats.range,
+          magic: mob.stats.magic,
+          }))
+    )
+  }, []);
+
   const wrappedPieceX = Math.floor(piece.x + WIDTH) % WIDTH;
   const wrappedPieceY = Math.floor(piece.y + HEIGHT) % HEIGHT;
 
@@ -139,6 +157,7 @@ export const GameCanvas: React.FC<Props> = ({
           ctx.fill();
         }
 
+        //Character
         if (wrappedPieceX === colIndex && wrappedPieceY === rowIndex) {
           drawCharacter({
             ctx,
@@ -151,6 +170,8 @@ export const GameCanvas: React.FC<Props> = ({
         }
         //MOBS
         mobs.forEach((mob) => {
+          //do not console.log here!
+
           const wrappedMobX = (mob.x + WIDTH) % WIDTH;
           const wrappedMobY = (mob.y + HEIGHT) % HEIGHT;
 

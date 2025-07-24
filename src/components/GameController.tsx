@@ -10,18 +10,23 @@ import { GameCanvas } from "./GameCanvas";
 import { spawnMobs } from "../game/entities/Enemy";
 import { moveMobs } from "../game/logic/useMobAI";
 import { movePiece as movePieceLogic } from "../game/logic/movePiece";
+import { Piece } from "../game/entities/Piece";
+import { generateBasePieceStats } from "../game/entities/PieceStats";
 
 export const GameController = forwardRef((_, ref) => {
   const initial = React.useMemo(() => generateMap(), []);
   const [floor, setFloor] = useState(0);
   const [tileSize, setTileSize] = useState(20);
   const [{ map }, setMap] = useState(initial);
-  const [mobs, setMobs] = useState(() => spawnMobs(3, WIDTH, HEIGHT));
+  const [mobs, setMobs] = useState(() => spawnMobs(0, 10, WIDTH, HEIGHT));
   const [moveState, setMoveState] = useState({
     from: initial.spawn,
     to: initial.spawn,
     t: 1,
   });
+  const [playerPiece] = useState(() => 
+    new Piece(initial.spawn.x, initial.spawn.y, generateBasePieceStats())
+  );
 
   const VIEWPORT_WIDTH = 20;
   const VIEWPORT_HEIGHT = 20;
@@ -73,10 +78,16 @@ export const GameController = forwardRef((_, ref) => {
       dx, dy, direction: dir, moveState, map, mobs, WIDTH, HEIGHT
     });
     if (!result) return;
-    if (result.newMap) {
-      setMap(result.newMap);
-      setFloor(floor + (result.floorChange ?? 0));
+
+    if (result.floorChange) {
+      setMap(result.newMap!);
+      setFloor(prev => {
+        const newFloor = prev + result.floorChange!;
+        setMobs(spawnMobs(newFloor, 10, WIDTH, HEIGHT));
+        return newFloor;
+      });
     }
+
     setMoveState(result.moveState);
     const playerPos = result.moveState.to;
     setMobs(prev => moveMobs({ mobs: prev, playerPos, map, WIDTH, HEIGHT }));
@@ -90,21 +101,36 @@ export const GameController = forwardRef((_, ref) => {
       case "ArrowLeft": return movePiece(-1, 0, "left");
       case "ArrowRight": return movePiece(1, 0, "right");
       case " ": return movePiece(0, 0, "stay");
+      case "A": return (directionRef.current)
     }
   };
+  const attack = (direction: "up" | "down" | "left" | "right" | "stay") => {
+    console.log("ATTACK!", direction);
+    // logic here
+  };
+
 
   useImperativeHandle(ref, () => ({
     movePiece,
     floor,
+    stats: playerPiece.stats, // Expose the stats to App
+    attack,
   }));
 
   const smoothPos = {
     x: moveState.from.x + (moveState.to.x - moveState.from.x) * moveState.t,
     y: moveState.from.y + (moveState.to.y - moveState.from.y) * moveState.t,
+    stats: playerPiece.stats,
   };
 
   return (
-    <div ref={containerRef} tabIndex={0} onKeyDown={handleKeyDown} style={{ outline: "none" }} className="relative h-full w-full">
+    <div
+      ref={containerRef}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      style={{ outline: "none" }}
+      className="relative h-full w-full"
+    >
       <GameCanvas
         map={map}
         piece={smoothPos}

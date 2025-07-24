@@ -53,6 +53,12 @@ export function moveMobs({ mobs, playerPos, map, WIDTH, HEIGHT }: MoveMobsInput)
     const tryX = (mob.x + choice.dx + WIDTH) % WIDTH;
     const tryY = (mob.y + choice.dy + HEIGHT) % HEIGHT;
 
+    if (!map[tryY] || map[tryY][tryX] === undefined) {
+  console.warn(`Invalid move coords: (${tryX}, ${tryY})`);
+  nextPositions.push({ x: mob.x, y: mob.y });
+  return mob; // skip move
+}
+
     const tile = map[tryY][tryX];
     const overlapsPlayer = tryX === playerPos.x && tryY === playerPos.y;
     const overlapsOtherMob = nextPositions.some(
