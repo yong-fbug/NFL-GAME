@@ -31,7 +31,7 @@ console.log("Cataclysmic Anomaly System")
   return (
     <div className="flex h-[100dvh] w-screen">
       {/* LEFT INFO */}
-      <div className="hidden md:flex basis-1/4 flex-none bg-red-200 p-4">
+      <div className="hidden md:flex basis-1/4 flex-none bg-black p-4 text-white">
         <p>Floor: {floor} </p>
         {stats && (
           <div className="mt-4">
@@ -48,13 +48,17 @@ console.log("Cataclysmic Anomaly System")
 
       {/* CENTER MAP */}
       <div className="flex items-center justify-center bg-gray-900">
-        <div className="relative flex-grow flex items-center justify-center bg-gray-900">
-          <GameController ref={gameControllerRef} />
+        <div className=" border-2 border-gray-100">
+          <div className="relative flex-grow flex items-center justify-center bg-gray-900">
+            <GameController ref={gameControllerRef} />
+          </div>
           <button
             onClick={() => gameControllerRef.current?.attack}
-          >A</button>
-        </div>
+          >
+          </button>
 
+        </div>
+            
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-50">
           <button
             onClick={() => gameControllerRef.current?.movePiece(0, -1, "up")}
@@ -105,7 +109,7 @@ console.log("Cataclysmic Anomaly System")
       </div>
 
       {/* RIGHT INFO + CONTROLS */}
-      <div className="hidden flex-grow md:flex basis-1/4 flex-col items-center relative bg-blue-200 p-4">
+      <div className="hidden flex-grow md:flex basis-1/4 flex-col items-center relative bg-black p-4 text-white">
         <div>
           <p>GOLD: 999999</p>
         </div>
