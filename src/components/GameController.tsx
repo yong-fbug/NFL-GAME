@@ -27,6 +27,7 @@ export const GameController = forwardRef((_, ref) => {
   const [playerPiece] = useState(() => 
     new Piece(initial.spawn.x, initial.spawn.y, generateBasePieceStats())
   );
+  const [attackMode, setAttackMode] = useState<boolean>(false)
 
   const VIEWPORT_WIDTH = 20;
   const VIEWPORT_HEIGHT = 20;
@@ -74,6 +75,32 @@ export const GameController = forwardRef((_, ref) => {
 
   const movePiece = (dx: number, dy: number, dir: typeof directionRef.current) => {
     directionRef.current = dir;
+
+    const nextX = moveState.to.x + dx;
+    const nextY = moveState.to.y + dy;
+
+    const target = mobs.find(m => m.x === nextX && m.y === nextY && m.stats.health > 0);
+
+    if (target) {
+      console.log(`Bumped mob ${target.id} — attacking for ${playerPiece.stats.attack} dmg`);
+      setMobs(prev =>
+        prev
+          .map(m =>
+            m.id === target.id
+              ? {
+                  ...m,
+                  stats: {
+                    ...m.stats,
+                    health: Math.max(0, m.stats.health - playerPiece.stats.attack),
+                  },
+                }
+              : m
+          )
+          .filter(m => m.stats.health > 0) // Remove dead mobs
+      );
+      return; // block actual movement
+    }
+
     const result = movePieceLogic({
       dx, dy, direction: dir, moveState, map, mobs, WIDTH, HEIGHT
     });
@@ -89,32 +116,84 @@ export const GameController = forwardRef((_, ref) => {
     }
 
     setMoveState(result.moveState);
+
     const playerPos = result.moveState.to;
     setMobs(prev => moveMobs({ mobs: prev, playerPos, map, WIDTH, HEIGHT }));
   };
 
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     e.preventDefault();
-    switch (e.key) {
-      case "ArrowUp": return movePiece(0, -1, "up");
-      case "ArrowDown": return movePiece(0, 1, "down");
-      case "ArrowLeft": return movePiece(-1, 0, "left");
-      case "ArrowRight": return movePiece(1, 0, "right");
-      case " ": return movePiece(0, 0, "stay");
-      case "A": return (directionRef.current)
+    
+    if (attackMode) {
+      switch (e.key){
+        case "ArrowUp": return tryAttack("up");
+        case "ArrowDown": return tryAttack("down");
+        case "ArrowLeft": return tryAttack("left");
+        case "ArrowRight": return tryAttack("right");
+        case "Shift": return setAttackMode(false);
+      }
+    } else {
+        switch (e.key) {
+        case "ArrowUp": return movePiece(0, -1, "up");
+        case "ArrowDown": return movePiece(0, 1, "down");
+        case "ArrowLeft": return movePiece(-1, 0, "left");
+        case "ArrowRight": return movePiece(1, 0, "right");
+        case " ": return movePiece(0, 0, "stay");
+        case "a": return setAttackMode(true);
+      }
     }
-  };
-  const attack = (direction: "up" | "down" | "left" | "right" | "stay") => {
-    console.log("ATTACK!", direction);
-    // logic here
+    
   };
 
+  //Attack logic
+  const tryAttack = (direction: "up" | "down" | "left" | "right" | "stay") => {
+    const { x, y } = moveState.to;
+    let targetTile = { x, y };
 
-  useImperativeHandle(ref, () => ({
+    switch(direction) {
+      case "up": targetTile.y -= 1; break;
+      case "down": targetTile.y += 1; break;
+      case "left": targetTile.x -= 1; break;
+      case "right": targetTile.x += 1; break; 
+    }
+
+    const range = playerPiece.stats.range;
+    const dx = Math.abs(targetTile.x - x);
+    const dy = Math.abs(targetTile.y - y);
+
+    if (dy + dx > range) {
+      console.log("Out of range") //debugging
+      return;
+    }
+
+    const target = mobs.find(m => m.x === targetTile.x && m.y === targetTile.y && m.stats.health > 0);
+    if (!target){
+      console.log("No mob on that tile");
+      return;
+    }
+
+    //
+    console.log(`Attacked mob ${target.id}!`);
+    setMobs(prev => 
+      prev.map(m => {
+        if (m.id === target.id) {
+          const newHealth = Math.max(0, m.stats.health - playerPiece.stats.attack);
+           console.log(`Damage mob ${m.id} → ${m.stats.health} → ${newHealth}`)
+           return { ...m, stats: { ...m.stats, health: newHealth }}
+        }
+        return m;
+      })
+      .filter(m => m.stats.health > 0)
+    );
+    setAttackMode(false); //this cancel out the activation of attack so either comment this or make it feature
+  };
+
+  useImperativeHandle(ref, () => ({ // Expose these to App 
     movePiece,
     floor,
-    stats: playerPiece.stats, // Expose the stats to App
-    attack,
+    stats: playerPiece.stats, 
+    setAttackMode,
   }));
 
   const smoothPos = {

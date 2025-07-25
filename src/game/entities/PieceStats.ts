@@ -7,6 +7,7 @@ export interface PieceStats {
   mana: number;
   attack: number;
   armor: number;
+  range: number;
 }
 
 export function generateBasePieceStats(): PieceStats {
@@ -17,6 +18,7 @@ export function generateBasePieceStats(): PieceStats {
     mana: 50 + Math.floor(Math.random() * 5),
     attack: 10 + Math.floor(Math.random() * 3),
     armor: 5,
+    range: 1,
   };
 }
 

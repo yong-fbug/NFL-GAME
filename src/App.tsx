@@ -10,7 +10,7 @@ const App = () => {
     ) => void;
     floor: number;
     stats: unknown;
-    attack: (direction: "up" | "down" | "left" | "right" | "stay") => void;
+    setAttackMode: (mode: boolean) => void;
     doSomething: () => void;
   }>(null);
 
@@ -52,10 +52,6 @@ console.log("Cataclysmic Anomaly System")
           <div className="relative flex-grow flex items-center justify-center bg-gray-900">
             <GameController ref={gameControllerRef} />
           </div>
-          <button
-            onClick={() => gameControllerRef.current?.attack}
-          >
-          </button>
 
         </div>
             
@@ -89,7 +85,7 @@ console.log("Cataclysmic Anomaly System")
 
             <button
               onClick={() =>
-                gameControllerRef.current?.movePiece(1, 0, "right")
+                gameControllerRef.current?.movePiece(1, 0,"right")
               }
               className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
               text-white font-bold shadow-md active:scale-95 transition-all"
@@ -99,13 +95,16 @@ console.log("Cataclysmic Anomaly System")
           </div>
 
           <button
-            onClick={() => gameControllerRef.current?.movePiece(0, 1, "down")}
+            onClick={() => gameControllerRef.current?.movePiece(0, 1,"down")}
             className="w-10 h-10 rounded-md bg-transparent border border-gray-500 hover:bg-gray-600 
               text-white font-bold shadow-md active:scale-95 transition-all"
           >
             v
           </button>
         </div>
+        <button onClick={() => gameControllerRef.current?.setAttackMode?.(true)}>A</button>
+        {/* debugging */}
+        { }
       </div>
 
       {/* RIGHT INFO + CONTROLS */}
