@@ -4,9 +4,11 @@ import Character_Piece from "../assets/Piece_img_v1.png";
 import first_mobs from "../assets/Piece_img_default.png";
 import { drawCharacter } from "../game/entities/Piece";
 import type { Mob } from "../game/entities/Enemy";
+import type { Biome } from "../game/generateMap";
 
 interface Props {
   map: number[][];
+  biomeMap: Biome[][]
   piece: { x: number; y: number };
   mobs: Mob[];
   VIEWPORT_WIDTH: number;
@@ -20,6 +22,7 @@ interface Props {
 
 export const GameCanvas: React.FC<Props> = ({
   map,
+  biomeMap,
   piece,
   mobs,
   VIEWPORT_HEIGHT,
@@ -94,18 +97,27 @@ export const GameCanvas: React.FC<Props> = ({
 
         //Background
         if (cell === 0) {
-          ctx.fillStyle = "#4B5563"; // bg-gray-600
+          const biome = biomeMap[rowIndex][colIndex]
+          let groundColor = "#4B4B4B"; // base ground - dark gray
+
+          if (biome === "grassland") groundColor = "#4A5D49"; // gray-green
+          // else if (biome === 'snow') groundColor = "#dbeafe";
+          // else if (biome === 'desert') groundColor = "#fde68a";
+
+          ctx.fillStyle = groundColor;
           ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
 
           ctx.strokeStyle = "#1F2937";
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 0.5;
           ctx.strokeRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
-        } else if (cell === 1) {
-          ctx.fillStyle = "#1F2937"; // bg-gray-800
+        }  else if (cell === 1) { //water
+          ctx.fillStyle = "#2F3B2F"; // bg-gray-800
+          
         } else if (cell === 2) {
-          ctx.fillStyle = "#1F2937";
-
+          let waterColor = "#3A4E63"; // gray-blue water
+          ctx.fillStyle = waterColor;
           ctx.fillRect(drawX, drawY, TILE_SIZE, TILE_SIZE);
+
         } else if (cell === 20) {
           const grad = ctx.createRadialGradient(
             drawX + TILE_SIZE / 2,
@@ -170,8 +182,6 @@ export const GameCanvas: React.FC<Props> = ({
         }
         //MOBS
         mobs.forEach((mob) => {
-          //do not console.log here!
-
           const wrappedMobX = (mob.x + WIDTH) % WIDTH;
           const wrappedMobY = (mob.y + HEIGHT) % HEIGHT;
 
@@ -184,16 +194,55 @@ export const GameCanvas: React.FC<Props> = ({
             drawY >= 0 &&
             drawY < VIEWPORT_HEIGHT
           ) {
+            const screenX = drawX * TILE_SIZE;
+            const screenY = drawY * TILE_SIZE;
+
+            // Draw enemy sprite
             drawCharacter({
               ctx,
-              drawX: drawX * TILE_SIZE,
-              drawY: drawY * TILE_SIZE,
+              drawX: screenX,
+              drawY: screenY,
               TILE_SIZE,
               characterImage: enemyImageRef.current!,
               direction: mob.direction,
             });
+
+            // Floating damage
+            const damageDisplay = mob.damageDisplay;
+            if (damageDisplay) {
+              const elapsed = Date.now() - damageDisplay.timestamp;
+              if (elapsed < 4000) {
+                const alpha = 1 - elapsed / 4000;
+                const offsetY = -10 - (elapsed / 4000) * 20; // float up
+
+                ctx.font = "bold 14px Arial";
+                ctx.fillStyle = `rgba(255, 220, 60, ${alpha.toFixed(2)})`;
+                ctx.textAlign = "center";
+                ctx.fillText(
+                  `-${damageDisplay.value}`,
+                  screenX + TILE_SIZE / 2,
+                  screenY + offsetY
+                );
+              } else {
+                delete mob.damageDisplay;
+              }
+            }
+
+            // Health bar (above mob)
+            if (mob.stats && mob.stats.maxHealth) {
+              const barWidth = TILE_SIZE;
+              const barHeight = 4;
+              const healthPercent = mob.stats.health / mob.stats.maxHealth;
+
+              ctx.fillStyle = "#333";
+              ctx.fillRect(screenX, screenY - 6, barWidth, barHeight);
+
+              ctx.fillStyle = "#4ade80"; // green
+              ctx.fillRect(screenX, screenY - 6, barWidth * healthPercent, barHeight);
+            }
           }
         });
+
       }
     }
   }, [

@@ -38,7 +38,7 @@ export const Tile: React.FC<TileProps> = React.memo(
           cell === 2
             ? "border"
             : cell === 1
-            ? "bg-gray-800 border-none"
+            ? "bg-red-800 border-none"
             : cell === 0
             ? "bg-gray-600"
             : ""

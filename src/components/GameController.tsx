@@ -17,7 +17,7 @@ export const GameController = forwardRef((_, ref) => {
   const initial = React.useMemo(() => generateMap(), []);
   const [floor, setFloor] = useState(0);
   const [tileSize, setTileSize] = useState(20);
-  const [{ map }, setMap] = useState(initial);
+  const [{ map, biomeMap }, setMap] = useState(initial);
   const [mobs, setMobs] = useState(() => spawnMobs(0, 10, WIDTH, HEIGHT));
   const [moveState, setMoveState] = useState({
     from: initial.spawn,
@@ -29,8 +29,8 @@ export const GameController = forwardRef((_, ref) => {
   );
   const [attackMode, setAttackMode] = useState<boolean>(false)
 
-  const VIEWPORT_WIDTH = 20;
-  const VIEWPORT_HEIGHT = 20;
+  const VIEWPORT_WIDTH = 15;
+  const VIEWPORT_HEIGHT = 15;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const directionRef = useRef<"up" | "down" | "left" | "right" | "stay">("down");
@@ -212,6 +212,7 @@ export const GameController = forwardRef((_, ref) => {
     >
       <GameCanvas
         map={map}
+        biomeMap={biomeMap}
         piece={smoothPos}
         mobs={mobs}
         TILE_SIZE={tileSize}

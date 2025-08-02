@@ -12,9 +12,15 @@ export interface Mob {
     attack: number;
     magic: boolean;
     health: number;
+    maxHealth: number;
     armor: number;
     range: number; // 1-3
   };
+  damageDisplay?: {
+    value: number;
+    timer: number;
+    timestamp: number;
+  }
 }
 
 export function spawnMobs(
@@ -70,5 +76,5 @@ function statsFromSignature(sig: number) {
   const magic = 1 + (sig % 2) === 0;
   const range = 1 + (sig % 3);
 
-  return { attack, health, armor, magic, range };
+  return { attack, health, armor, magic, range, maxHealth: health };
 }
