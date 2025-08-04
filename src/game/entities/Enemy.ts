@@ -18,9 +18,8 @@ export interface Mob {
   };
   damageDisplay?: {
     value: number;
-    timer: number;
     timestamp: number;
-  }
+  }[];
 }
 
 export function spawnMobs(

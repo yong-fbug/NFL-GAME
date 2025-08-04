@@ -4,6 +4,7 @@ export interface PieceStats {
   id: number;
   name: string;
   health: number;
+  maxHealth: number;
   mana: number;
   attack: number;
   armor: number;
@@ -11,10 +12,12 @@ export interface PieceStats {
 }
 
 export function generateBasePieceStats(): PieceStats {
+  const health = 100 + Math.floor(Math.random() * 5);
   return {
     id: PieceSignature(1),
     name: "CAS",
-    health: 100 + Math.floor(Math.random() * 5),
+    health,
+    maxHealth: health,
     mana: 50 + Math.floor(Math.random() * 5),
     attack: 10 + Math.floor(Math.random() * 3),
     armor: 5,

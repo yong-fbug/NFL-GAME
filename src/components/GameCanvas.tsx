@@ -5,11 +5,12 @@ import first_mobs from "../assets/Piece_img_default.png";
 import { drawCharacter } from "../game/entities/Piece";
 import type { Mob } from "../game/entities/Enemy";
 import type { Biome } from "../game/generateMap";
+import type { PieceStats } from "../game/entities/PieceStats";
 
 interface Props {
   map: number[][];
   biomeMap: Biome[][]
-  piece: { x: number; y: number };
+  piece: { x: number; y: number; stats: PieceStats };
   mobs: Mob[];
   VIEWPORT_WIDTH: number;
   VIEWPORT_HEIGHT: number;
@@ -169,7 +170,7 @@ export const GameCanvas: React.FC<Props> = ({
           ctx.fill();
         }
 
-        //Character
+        //Character / PIECEE
         if (wrappedPieceX === colIndex && wrappedPieceY === rowIndex) {
           drawCharacter({
             ctx,
@@ -179,6 +180,21 @@ export const GameCanvas: React.FC<Props> = ({
             direction,
             characterImage: characterImageRef.current!,
           });
+
+          const barWidth = TILE_SIZE;
+          const barHeight = 4;
+          const healthPercent = piece.stats.health / piece.stats.maxHealth;
+
+          ctx.fillStyle = "#60a5fa";
+          ctx.fillRect(drawX, drawY - 6, barWidth  * healthPercent, barHeight);
+          ctx.font = "10px Arial";
+          ctx.fillStyle = "#fff";
+          ctx.fillText(
+            `${piece.stats.health} / ${piece.stats.maxHealth}`,
+            drawX + TILE_SIZE / 2,
+            drawY - 8
+          );
+
         }
         //MOBS
         mobs.forEach((mob) => {
@@ -208,23 +224,23 @@ export const GameCanvas: React.FC<Props> = ({
             });
 
             // Floating damage
-            const damageDisplay = mob.damageDisplay;
-            if (damageDisplay) {
-              const elapsed = Date.now() - damageDisplay.timestamp;
-              if (elapsed < 4000) {
-                const alpha = 1 - elapsed / 4000;
-                const offsetY = -10 - (elapsed / 4000) * 20; // float up
+            if (mob.damageDisplay) {
+              for (const d of mob.damageDisplay) {
+                const elapsed = Date.now() - d.timestamp;
+                if (elapsed >= 2000) continue;
+
+                const progress = elapsed / 2000;
+                const offsetY = -10 - progress * 30;
+                const alpha = 1 - progress;
 
                 ctx.font = "bold 14px Arial";
-                ctx.fillStyle = `rgba(255, 220, 60, ${alpha.toFixed(2)})`;
+                ctx.fillStyle = `rgba(255, 80, 80, ${alpha.toFixed(2)})`;
                 ctx.textAlign = "center";
                 ctx.fillText(
-                  `-${damageDisplay.value}`,
+                  `${mob.stats.health} / ${mob.stats.maxHealth}`,
                   screenX + TILE_SIZE / 2,
                   screenY + offsetY
                 );
-              } else {
-                delete mob.damageDisplay;
               }
             }
 
@@ -285,5 +301,10 @@ export const GameCanvas: React.FC<Props> = ({
         />
       </div>
     </div>
+
+
+
+
+    
   );
 };

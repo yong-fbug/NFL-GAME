@@ -73,6 +73,25 @@ export const GameController = forwardRef((_, ref) => {
     return () => cancelAnimationFrame(id);
   }, []);
 
+  useEffect(() => { //logic for showing damage text
+    const interval = setInterval(() => {
+      setMobs(prev => 
+        prev.map(m => {
+          if (m.damageDisplay) {
+            const filtered = m.damageDisplay.filter(d => Date.now() - d.timestamp > 2000);
+          
+            return {
+              ...m, damageDisplay:filtered.length > 0 ? filtered : undefined
+            }
+          }
+          return m;
+        })
+      )
+    }, 100);
+    return () => clearInterval(interval);
+  });
+
+  //logic of movements, attack, display
   const movePiece = (dx: number, dy: number, dir: typeof directionRef.current) => {
     directionRef.current = dir;
 
@@ -82,6 +101,7 @@ export const GameController = forwardRef((_, ref) => {
     const target = mobs.find(m => m.x === nextX && m.y === nextY && m.stats.health > 0);
 
     if (target) {
+      const damage = playerPiece.stats.attack;
       console.log(`Bumped mob ${target.id} — attacking for ${playerPiece.stats.attack} dmg`);
       setMobs(prev =>
         prev
@@ -91,8 +111,13 @@ export const GameController = forwardRef((_, ref) => {
                   ...m,
                   stats: {
                     ...m.stats,
-                    health: Math.max(0, m.stats.health - playerPiece.stats.attack),
+                    health: Math.max(0, m.stats.health - damage),
+                  
                   },
+                  damageDisplay: [
+                    ...(m.damageDisplay || []),
+                    { value: damage, timestamp: Date.now()}
+                  ],
                 }
               : m
           )
